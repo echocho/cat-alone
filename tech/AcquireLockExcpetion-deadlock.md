@@ -57,6 +57,8 @@ From the stack trace we know that it's an exception thrown in Spring where it ca
 
 
 ## How to verify the cause?
+We can find information of every currently executing transaction inside InnoDB using `INNODB_TRX` table., such as if the transaction is started, if it is waiting for a lock, etc.
+It's more useful to join `INNODB_LOCKS` on `trx_requested_lock_id` and `lock_id`, to get details of the lock held and requested
 
 ```
 mysql> select tnx.*, lck.* from INFORMATION_SCHEMA.INNODB_TRX tnx join INFORMATION_SCHEMA.INNODB_LOCKS lck on tnx.trx_requested_lock_id = lck.lock_id\G
@@ -94,10 +96,37 @@ trx_autocommit_non_locking: 0
                 lock_space: 4975
                  lock_page: 6
                   lock_rec: 6
-                 lock_data: '4028b2e986e9b1620186e9cc7351111', '4028b2e986fd478c0186fd54768a2222'
+                 lock_data: '4028b2e986e9b1620186e9cc7351111', '4028b2e986fd478c0186fd54768a2222'     # id, uuid, primary key
 1 row in set, 1 warning (0.00 sec)
-
 ```
 
-## 
+From the query result above, we can see that our transaction is indeed waiting for the lock needed to insert data:
+`trx_state: LOCK WAIT`, `trx_query: insert into abc_invoice (col1, col2...`, `trx_operation_state: inserting`
 
+The next step is to find out where the other transaction is and where it holds the lock for so long. With further analysis we realized the problem is the method call `doMigration(documentId, userId)` inside `migrateOneDocument(Boolean reMigration, String documentId, String userId)` because it actually starts a new transaction when it handles the actual migration logics. It reads something like
+```java
+private void doMigration(String documentId, String userId) {
+        ...
+        handler.handle(documentId, userId);
+}
+```
+
+Code in handler.java
+```java
+public void handle(String documentId, String userId) {
+        ...
+        transactionHelper.runInNewTx(s -> {
+            processItems(context, itemId, temItemIds);
+        })
+}
+```
+
+Recall `migrateOneDocument()` is annotated with `@Transactional`. At the beginning of this transaction is a delete statement like `delete from abc_invoice where user_id=xx and document_id=xx` (with index on (user_id, document_id)) where it locks one row (Step A). However, in the next step (Step B), `INSERT`, a new transaction is started. Step A is waiting Step B to finish so that the transaction Step A is in can be committed; while Step B is waiting for Step A to release the lock to proceed. Hence, the deadlock occurs.
+
+
+## How to fix?
+Either remove the `@Transactional` or don't start a new transaction inside an existing transaction, as MySQL doesn't support nested transactions.
+
+## Follow-up questions
+### The data I'm trying to insert has different primary keys than the records that are being locked to delete. Why won't MySQL allow me to insert?
+[TODO]
