@@ -1,26 +1,11 @@
-# This is Header 1
+# Tech
 
-test blah blah blah
+[Common Misunderstanding of MySQL](tech/mysql-common-misunderstanding.md)
 
-## This is Header 2
-below is a code snippet
+[Hibernate AcquireLockException, a deadlock issue](tech/AcquireLockExcpetion-deadlock.md)
 
-```python
-def func():
-    print("hello world")
-```
-
-```java
-public void func() {
-    System.out.println("hello world");
-}
-```
-
-### This is Header 3
-1. rain
-2. thunderstorm
-3. wind
-
+# Non-teach
+TBD
 
 
 
