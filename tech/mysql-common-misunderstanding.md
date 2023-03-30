@@ -1,7 +1,7 @@
-# Some Common Misunderstanding of MySQL
+# Some Common Misunderstandings of MySQL
 
 
-## Conversion between UTC and non-UTC timezones are one-to-one
+## Misunderstanding 1: Conversion between UTC and non-UTC timezones are one-to-one
 In MySQL, temporal values are stored in `timestamp` as UTC values. When inserting and retrieving `timestamp` columns, if session time zone is not in UTC, there will be convertsion between UTC and session time zone.
 Due to local time zone changes like Daylight Saving Time, conversions between UTC and non-UTC time zones are not one-to-one in both directions.
 For example, two distinct UTC timestamps are not unique in MET timezone.
@@ -64,7 +64,7 @@ mysql> SELECT ts FROM tstable
 _Reference_
 https://dev.mysql.com/doc/refman/8.0/en/timestamp-lookups.html
 
-## Comparing dissimilar columns
+## Misunderstanding 2: Comparing dissimilar columns is at no cost
 Let's start with a sample table.
 ```sql
 mysql> SELECT * FROM test.teacher;
@@ -103,6 +103,18 @@ mysql> EXPLAIN select * from test.teacher where contract_id = 100400;
 +----+-------------+---------+------------+------+---------------+------+---------+------+------+----------+-------------+
 1 row in set, 3 warnings (0.00 sec)
 ```
+`SHOW WARNINGS` statement right after `EXPLAIN` provides detailed information regarding this collation conversion.
+```sql
+mysql> SHOW WARNINGS;
++---------+------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Level   | Code | Message                                                                                                                                                                                                                                                                             |
++---------+------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Warning | 1739 | Cannot use ref access on index 'contract_id' due to type or collation conversion on field 'contract_id'                                                                                                                                                                             |
+| Warning | 1739 | Cannot use range access on index 'contract_id' due to type or collation conversion on field 'contract_id'                                                                                                                                                                           |
+| Note    | 1003 | /* select#1 */ select `test`.`teacher`.`id` AS `id`,`test`.`teacher`.`name` AS `name`,`test`.`teacher`.`age` AS `age`,`test`.`teacher`.`contract_id` AS `contract_id`,`test`.`teacher`.`join_on` AS `join_on` from `test`.`teacher` where (`test`.`teacher`.`contract_id` = 100400) |
++---------+------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+3 rows in set (0.00 sec)
+```
 
 If we compare column `contract_id` with a string (the same data type), the optimizer would be able to use the index and gives the result very efficiently: see column `rows` which indicates that the optimizer is able to locate the exact one row that meets the requirement. 
 ```sql
@@ -114,12 +126,38 @@ mysql> EXPLAIN select * from test.teacher where contract_id = '100400';
 +----+-------------+---------+------------+------+---------------+-------------+---------+-------+------+----------+-------+
 1 row in set, 1 warning (0.00 sec)
 ```
+We won't see similar warning like the above query:
+```sql
+mysql> SHOW WARNINGS;
++-------+------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Level | Code | Message                                                                                                                                                                                                                                                                               |
++-------+------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Note  | 1003 | /* select#1 */ select `test`.`teacher`.`id` AS `id`,`test`.`teacher`.`name` AS `name`,`test`.`teacher`.`age` AS `age`,`test`.`teacher`.`contract_id` AS `contract_id`,`test`.`teacher`.`join_on` AS `join_on` from `test`.`teacher` where (`test`.`teacher`.`contract_id` = '100400') |
++-------+------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (0.00 sec)
+```
 
 
+## Misunderstanding 3: If `key` is not null in `EXPLAIN` statement output, it means one of the index is used and the query is efficient
+Yes, if the value of the `key` column is not null in `EXPLAIN` statement output, it means one of the index is used but it doesn't mean an index is FULLY used.
+To decide if a query is optimized, we need to analyze other columns like `key_len`. This column indicates the length of the key the optimizer decided to use with which you can tell how many parts of a composite index are used.
+For example, suppose we have a table defined as below and the value for `key_len` is 4
 
-## If `key` is null not in `EXPLAIN` statement, it means one of the index is used
-**TODO**
+```sql
+`col1` char(1) NOT NULL,                   -- 1 byte
+`col2` char(2) NOT NULL,                   -- 2 bytes
+`col3` tinyint(1) NOT NULL DEFAULT,        -- 1 byte
+`col4` tinyint(4) NOT NULL DEFAULT,        -- 4 bytes
+KEY `Index` (`col1`, `col2`, `col3`, `col4`)
+```
+Since indexes are used from left to right (leftmost prefix matching principle), only (`col1`, `col2`, `col3`) is used: 1+2+1=4.
 
-## Leftmost prefix principle of index: The order of columns in `WHERE` clause matters
+In addition, when using `EXPLAIN` to analyze your query's performance, be careful about the sample data you use - it may produce very different query plan result.
+
+_Reference_: Check out the full `EXPLAIN` output format via https://dev.mysql.com/doc/refman/8.0/en/explain-output.html.
+
+## Misunderstanding 4: The order of columns in `WHERE` clause matters in leftmost prefix principle of index
 The truth is, it doesn't. Only the order in the index matters.
 **TODO**
+
+
