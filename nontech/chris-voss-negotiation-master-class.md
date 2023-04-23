@@ -84,6 +84,55 @@ An inquisitive voice indicates deference, and people like deference.
 2. Make only one move in one communication.
 3. Always ends positive and softly.
 
+## Body Language and Speech Pattern
+- During negotiation, don't be too self conscious and swift focus from yourself to the other side.
+- You should be a sponge and soak up as much information as possible.
+
+### The 7/38/55 Rule
+The ratio of the content, the tonality and the body language should be 7/38/55.
+Tonality and body language are usually more important than the content. If the content doesn't match the tonality or the body language, look for tonality and body language and use label to break through to get more information.
+
+### Watch the Sidelines
+The people that are off the point of focus are going to be ridiculously real in their body language because they are not used to be paid attention to.
+You get honest and real body language/reactions from people who are off the primary contact.
+
+### Identify Baselines and Spot Deviation
+People have many ways to lie but only one way to tell the truth.
+When you go on a polygraph, a good polygrapher is going to ask you some control questions (questions that are the truths), e.g. what's your name, what day is it today, what's your dog's name, so that they get a line on what you look like when you are telling the truth.
+
+### The Pinocchio Effect
+People use more words than necessary to answer your question. It's likely that they are lying.
+
+### How to Respond to a Lie
+- You should be able to sense that people have come out of truth telling and realize that there's something people are uncomfortable with. For instance, you could say something like "Well, I heard you say you're OK with the deal, but seems like something's bothering you?", "Seems like there's something I missed?", "Seems like there's more here than meets the eye?"
+- Don't be accusatory; instead, use a curious tone of voice to indicate that you are collaborative and interested
+- If people lie, they perceive you as a threat, and are afraid to tell you the truth. You should use the late-night FM DJ voice.
+- Be predictable in that you're not going to attack them.
+- Be nonjudgmental, be steady and accountable.
+- Show that you are okay with what they think/feel now and drop their guard.
+
+## Creating the Illusion of Control
+The secret to gaining the upper hand in a negotiation is giving the other side the illusion of control.
+
+### Ask "How" and "What" Questions
+- Calibrated questions are open-ended questions, and they are calibrated for a fact. We calibrate it to make the other side feel in charge.
+- Ask calibrated questions with "what" and "how" because people love to be asked what to do and how to do.
+- Don't use "Why" because "why" as a question triggers defensiveness universally.
+
+### Ask Questions to Force Empathy
+Sometimes we need the other side to think in our shoes. We could just ask a simple question "How am I supposed to do it?"
+
+### Use Calibrated Questions to Shape Thinking
+- How am I supposed to do that?
+- What's going to happen if I do that?
+- How am I going to overcome the challenges here?
+
+### Avoid triggering Reciprocity
+You don't want to trigger reciprocity inadvertently, as people universally don't like to owe and are cautious about this.
+
+### Ask Legitimate Questions
+Let the other side stop and think about the situation which could potentially reshape their thinking.
+
 ## Reference
 1. [Never Split the Difference](https://www.amazon.com/Never-Split-Difference-Negotiating-Depended/dp/0062407805)
 2. [Active Listening Skills](https://www.amazon.com/Active-Listening-Techniques-Practical-Communication/dp/1647390648/ref=sr_1_1?crid=1JVWD899VOVHX&keywords=Active+Listening&qid=1681646216&s=books&sprefix=%2Cstripbooks%2C372&sr=1-1)
