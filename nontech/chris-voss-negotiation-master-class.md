@@ -133,6 +133,52 @@ You don't want to trigger reciprocity inadvertently, as people universally don't
 ### Ask Legitimate Questions
 Let the other side stop and think about the situation which could potentially reshape their thinking.
 
+## The Accusations Audit
+- An accusations audit is taking a step back, and taking an inventory, doing an audit of all the possible negatives, names, accusations, slanderous things that the other side might be thinking about me, based on the circumstances, or the environment, or their own paranoia. Make a list, and go after them early on and quickly, fearlessly. 
+- Unexpressed negative emotions never die. 
+- You should go identify these negative thoughts and feelings, go after them, and trigger a collaborative environment. 
+
+### Framing an Accusations Audit
+You can frame an accusations audit when you feel the other side starts having negative feels on you or on the situation. That you bring this up fearlessly and with sincere could bring positive feedback from the other side.
+
+### Getting Ahead of Negatives
+Example: getting a late checkout from a hotel clerk.
+
+### Be Exhaustive and Fearless
+It's rare that you're going to overdo it. 
+Be as forward thinking as possible.
+When you know you've done a good job: Y lay out your accusations audits, read the other side's reaction all long the way. If you have 15 items in the list and you've gone through the first three and the side says "Oh, you're being too hard on yourself", you know that you have done your job and have forced empathy into this situation and make the other side think for you.
+
+### Low-stakes practices
+Test drive the techniques.
+
+## The Value of "No"
+"No" is not a failure. With "No" you can get much arther and get much information. It will actually enhance your relationship with people when you make them feel not only it's okay to say no but also no is a really good answer. 
+
+### The Danger of "Yes"
+There are 3 types of yes
+- commitment
+  - very concise and curt
+- confirmation
+  - agreement, kind of concise and curt but depends on context
+- counterfeit
+  - given when people feel trapped, don't trust you.
+  - typically it's not short. It really means no, or maybe
+"Yes" can be confusing. It's a good idea to phrase your question the other way, making it a "no" question.
+
+### The Power of "No"
+A "no" to a properly phrased no-oriented question is worth at least 5 yes'.
+People feel safe and protected when they say no. It's human nature law of gravity.
+When people say no, they don't have any burden of commitment and are more willing to give you additional information.
+Do you agree -> do you disagree?
+Is it a good idea -> is it a ridiculous idea?
+
+### Use "No" to Get an Answer
+
+### Transition From "No" to "How"
+
+
+
 ## Reference
 1. [Never Split the Difference](https://www.amazon.com/Never-Split-Difference-Negotiating-Depended/dp/0062407805)
 2. [Active Listening Skills](https://www.amazon.com/Active-Listening-Techniques-Practical-Communication/dp/1647390648/ref=sr_1_1?crid=1JVWD899VOVHX&keywords=Active+Listening&qid=1681646216&s=books&sprefix=%2Cstripbooks%2C372&sr=1-1)
