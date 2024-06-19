@@ -5,7 +5,7 @@ This note distinguishes several common testings, how to conduct the tests in gen
 3. performance testing
 4. concurrency testing
 5. scalability testing
-6. stress teseting
+6. stress testing
 
 
 ## Benchmark Testing
@@ -39,5 +39,5 @@ https://www.guru99.com/stress-testing-tutorial.html
 1 concurrency, tps 1, good 10 concurrency, tps 10, etc. (if 10, 1, means lock)
 
 
-Further Reading
+## Further Reading
 https://octoperf.com/blog/2017/10/19/how-to-analyze-jmeter-results/#installation
