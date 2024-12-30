@@ -16,11 +16,11 @@ Marriage is framed as a system designed to foster long-term stability in raising
 
 ### 3. Sources of Parent-Child Conflict
 The analysis of intergenerational friction resonates with broader discussions on family dynamics:
+- Parents’ societal expectations vs. children’s individuality
+- Projected ideals and the gap between generations’ experiences.
+- Power struggles in transitional roles within families.
 
-### 4. Parents’ societal expectations vs. children’s individuality
-Projected ideals and the gap between generations’ experiences.
-Power struggles in transitional roles within families.
-Population and Social Structure
+### 4. Population and Social Structure
 Fei emphasizes that population issues cannot be resolved solely by encouraging or discouraging birth rates. Instead, they are deeply tied to the structure of society—how roles are created, filled, and vacated over time.
 
 ### 5. The Role of Gender and Labor Division
