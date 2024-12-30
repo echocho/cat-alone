@@ -4,10 +4,9 @@
 
 [Hibernate AcquireLockException, a deadlock issue](tech/AcquireLockExcpetion-deadlock.md)
 
-[A Simple Note on Literal and Instant Time Value](tech/mysql-literal-instant-time.md)
+[A Quick Note on Literal and Instant Time Value](tech/mysql-literal-instant-time.md)
 
 # Non-teach
-TBD
-
+[Book Review: The Reproduction System by Fei, Xiaotong](nontech/the-reproduction-system-book-review.md)
 
 
