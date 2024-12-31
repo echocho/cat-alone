@@ -16,7 +16,7 @@ Marriage is framed as a system designed to foster long-term stability in raising
 
 ### 3. Sources of Parent-Child Conflict
 The analysis of intergenerational friction resonates with broader discussions on family dynamics:
-- Parents’ societal expectations vs. children’s individuality
+- Parents’ societal expectations vs. children’s individuality.
 - Projected ideals and the gap between generations’ experiences.
 - Power struggles in transitional roles within families.
 
