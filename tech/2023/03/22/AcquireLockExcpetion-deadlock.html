@@ -1,0 +1,124 @@
+<h1 id="it-all-started-from-a-cannotacquirelockexception">It all started from a CannotAcquireLockException…</h1>
+
+<p>One day a team member was working on a data migration service and when he triggered the migration he met the following error</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>org.springframework.dao.CannotAcquireLockException: Could not execute JDBC batch update; SQL [insert into abc_invoice (col1, col2) values ...
+</code></pre></div></div>
+<p>It wasn’t a hard question but a good one for us to reflect and review the concepts of deadlocks, transaction isolations, and how to troubleshoot related problems in MySQL.</p>
+
+<h2 id="where-does-this-error-occur">Where does this error occur?</h2>
+<p>Structure of the migration service looks like this:</p>
+
+<p>controller –[calls]–&gt; migration scheduler –[sends]–&gt; listener –[calls]–&gt; migration helper service –[calls]–&gt; other services</p>
+
+<p>The exception occurs in the following method in migration helper service</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Transactional</span>
+<span class="kd">public</span> <span class="kt">void</span> <span class="nf">migrateOneDocument</span><span class="o">(</span><span class="nc">Boolean</span> <span class="n">reMigration</span><span class="o">,</span> <span class="nc">String</span> <span class="n">documentId</span><span class="o">,</span> <span class="nc">String</span> <span class="n">userId</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">reMigration</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">clearExistingRecords</span><span class="o">(</span><span class="n">documentId</span><span class="o">,</span> <span class="n">userId</span><span class="o">);</span>
+    <span class="o">}</span>
+    <span class="n">doMigration</span><span class="o">(</span><span class="n">documentId</span><span class="o">,</span> <span class="n">userId</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="what-does-this-error-mean">What does this error mean?</h2>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>org.springframework.dao.CannotAcquireLockException: Could not execute JDBC batch update; SQL [insert into abc_invoice (col1, col2) values (?, ?)]; nested exception is org.hibernate.exception.LockAcquisitionException: Could not execute JDBC batch update
+at org.springframework.orm.hibernate3.SessionFactoryUtils.convertHibernateAccessException(SessionFactoryUtils.java:651) ~[spring-orm-4.3.30.RELEASE.jar:4.3.30.RELEASE]
+at org.springframework.orm.hibernate3.HibernateTransactionManager.convertHibernateAccessException(HibernateTransactionManager.java:800) ~[spring-orm-4.3.30.RELEASE.jar:4.3.30.RELEASE]
+... more
+...Caused by: org.hibernate.exception.LockAcquisitionException: Could not execute JDBC batch update
+at org.hibernate.exception.SQLStateConverter.convert(SQLStateConverter.java:107) ~[hibernate-core-3.6.10.Final.jar:3.6.10.Final]
+at org.hibernate.exception.JDBCExceptionHelper.convert(JDBCExceptionHelper.java:66) ~[hibernate-core-3.6.10.Final.jar:3.6.10.Final]
+at org.hibernate.jdbc.AbstractBatcher.executeBatch(AbstractBatcher.java:275) ~[hibernate-core-3.6.10.Final.jar:3.6.10.Final]
+at org.hibernate.engine.ActionQueue.executeActions(ActionQueue.java:268) ~[hibernate-core-3.6.10.Final.jar:3.6.10.Final]
+at org.hibernate.engine.ActionQueue.executeActions(ActionQueue.java:184) ~[hibernate-core-3.6.10.Final.jar:3.6.10.Final]
+at org.hibernate.event.def.AbstractFlushingEventListener.performExecutions(AbstractFlushingEventListener.java:321) ~[hibernate-core-3.6.10.Final.jar:3.6.10.Final]
+at org.hibernate.event.def.DefaultFlushEventListener.onFlush(DefaultFlushEventListener.java:51) ~[hibernate-core-3.6.10.Final.jar:3.6.10.Final]
+at org.hibernate.impl.SessionImpl.flush(SessionImpl.java:1216) ~[hibernate-core-3.6.10.Final.jar:3.6.10.Final]
+at org.springframework.orm.hibernate3.HibernateTransactionManager$HibernateTransactionObject.flush(HibernateTransactionManager.java:900) ~[spring-orm-4.3.30.RELEASE.jar:4.3.30.RELEASE]
+... 45 more
+Caused by: java.sql.BatchUpdateException: Lock wait timeout exceeded; try restarting transaction
+at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method) ~[?:1.8.0_292]
+at sun.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:62) ~[?:1.8.0_292]
+at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45) ~[?:1.8.0_292]
+at java.lang.reflect.Constructor.newInstance(Constructor.java:423) ~[?:1.8.0_292]
+... 45 more
+Caused by: com.mysql.cj.jdbc.exceptions.MySQLTransactionRollbackException: Lock wait timeout exceeded; try restarting transaction
+at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:123) ~[mysql-connector-java-8.0.24.jar:8.0.24]
+at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122) ~[mysql-connector-java-8.0.24.jar:8.0.24]
+at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:953) ~[mysql-connector-java-8.0.24.jar:8.0.24]
+at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1092) ~[mysql-connector-java-8.0.24.jar:8.0.24]
+at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1040) ~[mysql-connector-java-8.0.24.jar:8.0.24]
+... 45 more
+</code></pre></div></div>
+<p>From the stack trace we know that it’s an exception thrown in Spring where it cannot acquire the lock it needs to insert data. In addition, there’s an error from MySQL JDBC level indicating that the lock wait time out exceeded, meaning this thread had been waiting until timeout but still didn’t get the lock.</p>
+
+<h2 id="how-to-verify-the-cause">How to verify the cause?</h2>
+<p>We can find information of every currently executing transaction inside InnoDB using <code class="language-plaintext highlighter-rouge">INNODB_TRX</code> table., such as if the transaction is started, if it is waiting for a lock, etc.
+It’s more useful to join <code class="language-plaintext highlighter-rouge">INNODB_LOCKS</code> on <code class="language-plaintext highlighter-rouge">trx_requested_lock_id</code> and <code class="language-plaintext highlighter-rouge">lock_id</code>, to get details of the lock held and requested</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mysql&gt; select tnx.*, lck.* from INFORMATION_SCHEMA.INNODB_TRX tnx join INFORMATION_SCHEMA.INNODB_LOCKS lck on tnx.trx_requested_lock_id = lck.lock_id\G
+*************************** 1. row ***************************
+                    trx_id: 819311
+                 trx_state: LOCK WAIT
+               trx_started: 2023-03-20 09:47:09
+     trx_requested_lock_id: 819311:4975:6:6
+          trx_wait_started: 2023-03-20 09:47:28
+                trx_weight: 3
+       trx_mysql_thread_id: 12656
+                 trx_query: insert into abc_invoice (col1, col2 ...
+       trx_operation_state: inserting
+         trx_tables_in_use: 1
+         trx_tables_locked: 1
+          trx_lock_structs: 2
+     trx_lock_memory_bytes: 1136
+           trx_rows_locked: 1
+         trx_rows_modified: 1
+   trx_concurrency_tickets: 0
+       trx_isolation_level: REPEATABLE READ
+         trx_unique_checks: 1
+    trx_foreign_key_checks: 1
+trx_last_foreign_key_error: NULL
+ trx_adaptive_hash_latched: 0
+ trx_adaptive_hash_timeout: 0
+          trx_is_read_only: 0
+trx_autocommit_non_locking: 0
+                   lock_id: 819311:4975:6:6
+               lock_trx_id: 819311
+                 lock_mode: X,GAP
+                 lock_type: RECORD
+                lock_table: `repos`.`abc_invoice`
+                lock_index: IDX_DOCUMENT_ID
+                lock_space: 4975
+                 lock_page: 6
+                  lock_rec: 6
+                 lock_data: '4028b2e986e9b1620186e9cc7351111', '4028b2e986fd478c0186fd54768a2222'     # id, uuid, primary key
+1 row in set, 1 warning (0.00 sec)
+</code></pre></div></div>
+
+<p>From the query result above, we can see that our transaction is indeed waiting for the lock needed to insert data:
+<code class="language-plaintext highlighter-rouge">trx_state: LOCK WAIT</code>, <code class="language-plaintext highlighter-rouge">trx_query: insert into abc_invoice (col1, col2...</code>, <code class="language-plaintext highlighter-rouge">trx_operation_state: inserting</code></p>
+
+<p>The next step is to find out where the other transaction is and where it holds the lock for so long. With further analysis we realized the problem is the method call <code class="language-plaintext highlighter-rouge">doMigration(documentId, userId)</code> inside <code class="language-plaintext highlighter-rouge">migrateOneDocument(Boolean reMigration, String documentId, String userId)</code> because it actually starts a new transaction when it handles the actual migration logics. It reads something like</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kt">void</span> <span class="nf">doMigration</span><span class="o">(</span><span class="nc">String</span> <span class="n">documentId</span><span class="o">,</span> <span class="nc">String</span> <span class="n">userId</span><span class="o">)</span> <span class="o">{</span>
+        <span class="o">...</span>
+        <span class="n">handler</span><span class="o">.</span><span class="na">handle</span><span class="o">(</span><span class="n">documentId</span><span class="o">,</span> <span class="n">userId</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Code in handler.java</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">handle</span><span class="o">(</span><span class="nc">String</span> <span class="n">documentId</span><span class="o">,</span> <span class="nc">String</span> <span class="n">userId</span><span class="o">)</span> <span class="o">{</span>
+        <span class="o">...</span>
+        <span class="n">transactionHelper</span><span class="o">.</span><span class="na">runInNewTx</span><span class="o">(</span><span class="n">s</span> <span class="o">-&gt;</span> <span class="o">{</span>
+            <span class="n">processItems</span><span class="o">(</span><span class="n">context</span><span class="o">,</span> <span class="n">itemId</span><span class="o">,</span> <span class="n">temItemIds</span><span class="o">);</span>
+        <span class="o">})</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Recall <code class="language-plaintext highlighter-rouge">migrateOneDocument()</code> is annotated with <code class="language-plaintext highlighter-rouge">@Transactional</code>. At the beginning of this transaction is a delete statement like <code class="language-plaintext highlighter-rouge">delete from abc_invoice where user_id=xx and document_id=xx</code> (with index on (user_id, document_id)) where it locks one row (Step A). However, in the next step (Step B), <code class="language-plaintext highlighter-rouge">INSERT</code>, a new transaction is started. Step A is waiting Step B to finish so that the transaction Step A is in can be committed; while Step B is waiting for Step A to release the lock to proceed. Hence, the deadlock occurs.</p>
+
+<h2 id="how-to-fix">How to fix?</h2>
+<p>Either remove the <code class="language-plaintext highlighter-rouge">@Transactional</code> or don’t start a new transaction inside an existing transaction, as MySQL doesn’t support nested transactions.</p>
+
+<h2 id="follow-up-questions">Follow-up questions</h2>
+<h3 id="the-data-im-trying-to-insert-has-different-primary-keys-than-the-records-that-are-being-locked-to-delete-why-wont-mysql-allow-me-to-insert">The data I’m trying to insert has different primary keys than the records that are being locked to delete. Why won’t MySQL allow me to insert?</h3>
+<p>[TODO]</p>

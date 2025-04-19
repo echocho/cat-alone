@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url>
+<loc>https://echocho.github.io/tech/2023/03/22/AcquireLockExcpetion-deadlock.html</loc>
+<lastmod>2023-03-22T00:00:00+00:00</lastmod>
+</url>
+<url>
+<loc>https://echocho.github.io/2023/03/28/mysql-common-misunderstanding.html</loc>
+<lastmod>2023-03-28T00:00:00+00:00</lastmod>
+</url>
+<url>
+<loc>https://echocho.github.io/2023/04/08/mysql-literal-instant-time.html</loc>
+<lastmod>2023-04-08T00:00:00+00:00</lastmod>
+</url>
+<url>
+<loc>https://echocho.github.io/2023/04/18/different-testing-in-java.html</loc>
+<lastmod>2023-04-18T00:00:00+00:00</lastmod>
+</url>
+<url>
+<loc>https://echocho.github.io/about/</loc>
+</url>
+</urlset>
