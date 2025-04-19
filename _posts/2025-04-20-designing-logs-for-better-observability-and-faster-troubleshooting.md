@@ -1,9 +1,17 @@
+---
+title: "Designing Logs for Better Observability"
+date: 2025-04-20
+tags: [logging, observability, troubleshooting]
+categories: [Tech]
+excerpt: "How to design better log formats for better observability and faster troubleshooting in distributed systems."
+---
+
 # Designing Logs for Better Observability and Faster Troubleshooting
 
 ## System Architecture
 
 The overall system architecture is composed of three main parts:
-![logging-system-diagram.png](pics/logging-system-diagram.png)
+![logging-system-diagram.png](/assets/images/logging-system-diagram.png)
 
 **Part 1: Upstream Services and Snapshot Generation**  
 This layer includes “Service 1”, “Service 2”, “Service 3”, and “Service 4”, all responsible for handling end-user requests. These requests typically represent business transactions, such as purchasing a book or subscribing to a service.  

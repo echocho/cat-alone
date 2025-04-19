@@ -262,11 +262,6 @@ Well, yes, he can!
 From the above example, we can see it's important to **identify areas in your application that may need to change and isolate them from other areas that do not change**. 
 In cases where properties or methods are prone to change or unclear during development, we should **use composition more, inheritance less**. And as always, **programing to the interface, not the implementation** would make our code more flexible.
 
-## Reference
-- Head First Design Patterns, by Eric Freeman, Elisabeth Robson, Bert Bates, Kathy Sierra
-
-- https://stackoverflow.com/questions/370258/real-world-example-of-the-strategy-pattern
-
 
 ## Observer Pattern
 ### Definition  
@@ -462,3 +457,19 @@ The publisher-subscriber pattern is for asynchronous communication, with the hel
 One benefit of using publisher-subscriber pattern over observer pattern is that the former is not blocking.
 Another benefit is that message brokers usually have retry mechanism built in; while you need to implement your own retry mechanism when using the observer pattern.
 
+
+## Singleton Pattern
+ways of implementing a singleton
+potential problems of singleton and how to handle them (threadsafe, performance, etc)
+explanation with code
+
+## Decorator Pattern
+java vs python
+
+
+
+
+## Reference
+- Head First Design Patterns, by Eric Freeman, Elisabeth Robson, Bert Bates, Kathy Sierra
+
+- https://stackoverflow.com/questions/370258/real-world-example-of-the-strategy-pattern

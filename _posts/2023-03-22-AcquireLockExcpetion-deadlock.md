@@ -1,3 +1,11 @@
+---
+title: "It all started from a CannotAcquireLockException..."
+date: 2023-03-22
+tags: [MySQL, troubleshooting]
+categories: [Tech]
+excerpt: "A reflect and review the concepts of deadlocks, transaction isolations, and how to troubleshoot related problems in MySQL."
+---
+
 # It all started from a CannotAcquireLockException...
 
 One day a team member was working on a data migration service and when he triggered the migration he met the following error

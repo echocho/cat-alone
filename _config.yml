@@ -1,4 +1,36 @@
-remote_theme: pages-themes/architect@v0.2.0
+title: Echocho's Blog
+description: Thoughts on Tech, Systems, Life, and Books
+remote_theme: mmistakes/minimal-mistakes@4.24.0
 
-title: [echocho's blog posts]
-description: [A collection of some of my thoughts on tech and non tech.]
+url: "https://echocho.github.io"  # GitHub pages URL
+baseurl: ""                       # No subdirectory
+
+author:
+  name: Echocho
+  avatar: "/assets/images/avatar.png"  # optional
+
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+collections:
+  tech:
+    output: true
+  nontech:
+    output: true
+
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: single
+      author_profile: true
+      read_time: true
+      comments: false
+      share: true
+      related: true
+
+theme_settings:
+  minimal_mistakes_skin: "air" # or "default", "mint", "dark", etc.
