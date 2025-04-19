@@ -1,4 +1,5 @@
 # Tech
+[Designing Logs for Better Observability and Faster Troubleshooting](tech/designing-logs-for-better-observability-and-faster-troubleshooting.md)
 
 [Common Misunderstandings of MySQL](tech/mysql-common-misunderstanding.md)
 
