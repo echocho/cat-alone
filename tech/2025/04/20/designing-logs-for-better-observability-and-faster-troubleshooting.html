@@ -1,0 +1,163 @@
+<h1 id="designing-logs-for-better-observability-and-faster-troubleshooting">Designing Logs for Better Observability and Faster Troubleshooting</h1>
+
+<h2 id="system-architecture">System Architecture</h2>
+
+<p>The overall system architecture is composed of three main parts:
+<img src="/assets/images/logging-system-diagram.png" alt="logging-system-diagram.png" /></p>
+
+<p><strong>Part 1: Upstream Services and Snapshot Generation</strong><br />
+This layer includes “Service 1”, “Service 2”, “Service 3”, and “Service 4”, all responsible for handling end-user requests. These requests typically represent business transactions, such as purchasing a book or subscribing to a service.<br />
+Each transaction is sent to the <strong>Transaction Snapshot Service</strong> for further processing via ActiveMQ, using the message type <code class="language-plaintext highlighter-rouge">"TransactionGenerated"</code>.<br />
+Processed transaction data — such as <code class="language-plaintext highlighter-rouge">accountId</code>, <code class="language-plaintext highlighter-rouge">transactionType</code>, <code class="language-plaintext highlighter-rouge">transactionDate</code>, <code class="language-plaintext highlighter-rouge">revenueAmount</code>, and <code class="language-plaintext highlighter-rouge">transactionPreference</code> — is then streamed to the downstream processor via Kafka.</p>
+
+<p><strong>Part 2: Transaction Snapshot Processor</strong><br />
+This microservice listens to Kafka topics, ingests transaction snapshots, parses them, and inserts the parsed data into the downstream service’s database.</p>
+
+<p><strong>Part 3: Downstream Services</strong><br />
+This layer consists of the data store where the <strong>Data Ingestion Service</strong> writes incoming transaction data. It also supports the web UI that end users interact with.</p>
+
+<h2 id="logging-format-design-principles">Logging Format Design Principles</h2>
+
+<p>When designing your logging format, focus on the system’s key operations, anticipate potential issues, and think carefully about what needs to be monitored.</p>
+
+<h3 id="a-counterexample">A Counterexample</h3>
+
+<p>I’ve seen cases where engineers, without a clear design principle, ended up adding verbose, low-value logs, similar to local debugging outputs, such as:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Time</th>
+      <th>Message</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>04/19/2025 18:06:47.152</td>
+      <td>Transaction Event execution time: 20</td>
+    </tr>
+    <tr>
+      <td>04/19/2025 18:06:47.152</td>
+      <td>Time taken to make insertion: 17</td>
+    </tr>
+    <tr>
+      <td>04/19/2025 18:06:47.147</td>
+      <td>Time taken to make db insertion: 11 TxnSource : ORDER</td>
+    </tr>
+    <tr>
+      <td>04/19/2025 18:06:47.135</td>
+      <td>Time taken to getConnection: 3</td>
+    </tr>
+    <tr>
+      <td>04/19/2025 18:06:47.135</td>
+      <td>after getting db connection</td>
+    </tr>
+    <tr>
+      <td>…</td>
+      <td>…</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Problems with this approach:</strong></p>
+<ul>
+  <li>Floods the system with excessive logs</li>
+  <li>Degrades query performance</li>
+  <li>Makes it harder to efficiently locate relevant information during incidents</li>
+</ul>
+
+<hr />
+
+<h3 id="key-logging-design-principles">Key Logging Design Principles</h3>
+
+<ul>
+  <li>
+    <p><strong>Monitoring requirements should drive the structure and content of your logs:</strong><br />
+Otherwise, it becomes extremely difficult to leverage them effectively during troubleshooting.</p>
+  </li>
+  <li>
+    <p><strong>Use a consistent log format:</strong><br />
+Ensure fields like event code, event duration, labels, and log levels have consistent meanings across all modules. Otherwise, during an incident, you’ll waste time searching through unfamiliar or inconsistent logs.</p>
+  </li>
+  <li>
+    <p><strong>Leverage index fields for faster querying:</strong><br />
+Especially when using tools like Kibana, good indexing is critical for loading dashboards efficiently. Relying solely on full-text search over several months of data can easily cause timeouts.</p>
+  </li>
+</ul>
+
+<h2 id="key-problems-and-questions-to-address">Key Problems and Questions to Address</h2>
+
+<p>The <strong>core guarantee</strong> of this system is that every transaction generated upstream must be reliably persisted in the downstream database — <strong>without data loss</strong>.</p>
+
+<p>This leads to two critical questions:</p>
+<ol>
+  <li><strong>How can we detect if data loss has occurred?</strong></li>
+  <li><strong>If a customer reports missing data, how can we quickly identify at which stage the data was lost?</strong></li>
+</ol>
+
+<p>Given the system’s asynchronous nature, we must monitor:</p>
+<ul>
+  <li>Overall (end-to-end) latency</li>
+  <li>Stage-by-stage latency</li>
+  <li>Error occurrences and types</li>
+</ul>
+
+<p>Additionally, we need to organize errors smartly to decide on proper responses.</p>
+
+<h2 id="designing-a-logging-format-to-solve-these-problems">Designing a Logging Format to Solve These Problems</h2>
+
+<h3 id="1-how-can-we-detect-if-data-loss-has-occurred">1. How can we detect if data loss has occurred?</h3>
+
+<ul>
+  <li>Log the transaction ID immediately when a transaction is generated.</li>
+  <li>Log the transaction ID again after successful insertion into the database.<br />
+By comparing the two sets of IDs, we can easily identify any lost transactions.</li>
+</ul>
+
+<h3 id="2-how-can-we-quickly-identify-at-which-stage-data-was-lost">2. How can we quickly identify at which stage data was lost?</h3>
+
+<ul>
+  <li>At each processing stage, log:
+    <ul>
+      <li>The transaction ID</li>
+      <li>The processing outcome (success/failure)</li>
+    </ul>
+  </li>
+  <li>Implement a <strong>Trace ID</strong> that spans all stages to chain related activities together.<br />
+With a Trace ID, we can filter logs to easily see the full lifecycle of a transaction.</li>
+</ul>
+
+<h3 id="3-how-can-we-monitor-system-latency-overall-and-per-stage">3. How can we monitor system latency (overall and per stage)?</h3>
+
+<ul>
+  <li>
+    <p><strong>Within Transaction Snapshot Service:</strong><br />
+Break down snapshot generation into phases (e.g., context preparation, discount calculation, revenue calculation, Kafka publish).<br />
+Use a <code class="language-plaintext highlighter-rouge">ThreadLocal</code> to capture latency per phase.</p>
+  </li>
+  <li>
+    <p><strong>End-to-End Latency:</strong><br />
+Capture the timestamp when a transaction is generated and when it is inserted downstream. The difference gives the overall latency.</p>
+  </li>
+</ul>
+
+<h3 id="4-how-should-we-monitor-and-organize-errors">4. How should we monitor and organize errors?</h3>
+
+<p>Errors typically fall into three categories:</p>
+<ul>
+  <li><strong>Neglectable:</strong> Caused by user misconfiguration; no action needed.</li>
+  <li><strong>Retriable:</strong> Temporary issues like DB lock contention; can be automatically retried.</li>
+  <li><strong>Non-retriable:</strong> Critical issues requiring engineering investigation.</li>
+</ul>
+
+<p>Standardize error logs with fields like <code class="language-plaintext highlighter-rouge">log.level</code> and <code class="language-plaintext highlighter-rouge">event.severity</code>:</p>
+<ul>
+  <li><strong>Non-retriable error:</strong> <code class="language-plaintext highlighter-rouge">level=error</code>, <code class="language-plaintext highlighter-rouge">event.severity=error (3)</code></li>
+  <li><strong>Retriable error:</strong> <code class="language-plaintext highlighter-rouge">level=error</code>, <code class="language-plaintext highlighter-rouge">event.severity=warn (4)</code></li>
+  <li><strong>Neglectable error:</strong> <code class="language-plaintext highlighter-rouge">level=warn</code>, <code class="language-plaintext highlighter-rouge">event.severity=notice (5)</code></li>
+</ul>
+
+<h2 id="final-thoughts">Final Thoughts</h2>
+
+<p>Designing good logging is not just about “what happened” — it’s about enabling observability, rapid troubleshooting, and ultimately ensuring system reliability.<br />
+Start by defining <strong>what you need to monitor</strong> — then build your logs around that.</p>

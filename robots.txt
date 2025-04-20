@@ -1,1 +1,1 @@
-Sitemap: https://echocho.github.io/sitemap.xml
+Sitemap: https://echocho.github.io/cat-alone/sitemap.xml
