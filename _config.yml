@@ -3,7 +3,7 @@ description: Thoughts on Tech, Systems, Life, and Books
 remote_theme: mmistakes/minimal-mistakes@4.24.0
 
 url: "https://echocho.github.io"  # GitHub pages URL
-baseurl: ""                       # No subdirectory
+baseurl: "/cat-alone"
 
 author:
   name: Echocho
