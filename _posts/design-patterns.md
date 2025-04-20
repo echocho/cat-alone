@@ -10,7 +10,7 @@ It's useful when you want the application to do X, but X is not clear yet and wo
 
 ### Example
 Let's say we are building a video game. When defining characters' movement, we want them to run or walk. How to implement it? One way is through inheritance:
-![game-character-inheritance-class-diagram.png](pics/game-character-inheritance-class-diagram.png)
+![game-character-inheritance-class-diagram.png](/assets/images/game-character-inheritance-class-diagram.png)
 Our implementation may look something like this: 
 ```Java
 public abstract class Character {
@@ -122,7 +122,7 @@ To make our lives easier, we need to find a way to change movement without chang
 We can encapsulate movements in an interface and let each character uses a different movement at runtime.
 
 Following is the new class diagram using Strategy pattern. 
-![game-character-strategy-pattern-class-diagram.png](pics/game-character-strategy-pattern-class-diagram.png)
+![game-character-strategy-pattern-class-diagram.png](/assets/images/game-character-strategy-pattern-class-diagram.png)
 
 We need to do the following in our code:
 1. Create an interface called `MovementBehavior`.
