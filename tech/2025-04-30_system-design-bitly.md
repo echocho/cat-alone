@@ -10,12 +10,12 @@ excerpt: "How to design a url shortener service like bit.ly."
 
 ## How to approach this problem, or any system design problem
 We could approach a system design problem, with the following steps: 
-0. Understand the problem, i.e. what an url shortener is, how it works.
-1. Understand the functional requirements and non-functional requirements for this system. Functional requirements specify the specific functions or behaviors a system must perform to meet user needs. On the other hand, non-functional requirements define how a system should perform, focusing on qualities attributes, like performance, security, usability, reliability, and scalability.
-2. Identify and define core entities.
-3. Design APIs or interfaces.
-4. Create a high level design. This design should focus and meet all functional requirements made in Step#1.
-5. Dive deeper into the design. This phase should be focused on some, if not all, non-functional requirements made in Step#1.
+1. Understand the problem, i.e. what an url shortener is, how it works.
+2. Understand the functional requirements and non-functional requirements for this system. Functional requirements specify the specific functions or behaviors a system must perform to meet user needs. On the other hand, non-functional requirements define how a system should perform, focusing on qualities attributes, like performance, security, usability, reliability, and scalability.
+3. Identify and define core entities.
+4. Design APIs or interfaces.
+5. Create a high level design. This design should focus and meet all functional requirements made in Step#1.
+6. Dive deeper into the design. This phase should be focused on some, if not all, non-functional requirements made in Step#1.
 
 Let's go through the design process step by step.
 
@@ -38,9 +38,10 @@ To summarize, the core non-functional requirements are:
 - The system should ensure uniqueness on shortened URL (as less collision as possible).
 - The system should have low latency on redirection, i.e < 200 ms.
 - The system should scale to support 1 billion shortened URLs and 100 million DAU.
-- [???] The system should be reliable and available 99.99% of the time (availability > consistency)
 
-## 2. Identify and define core entities.
+[//]: # (- [???] The system should be reliable and available 99.99% of the time &#40;availability > consistency&#41;)
+
+## 2. Identify and define core entities
 There could have a plenty primary entities we identify by this step. However, during this phase we should only focus on the most important ones that's crucially involved in the functional requirements defined earlier. In additional, we don't need to finalize all the attributes (columns) any entity should have, just identify the most important ones. Otherwise, we'll be lost in the details.
 
 So the 3 core entities we have:
@@ -48,7 +49,7 @@ So the 3 core entities we have:
 - LongUrl
 - User
 
-## 3. Design APIs or interfaces.
+## 3. Design APIs or interfaces
 APIs or Interfaces define a communication contract between a client and a server. In this step, we need to go through core functional requirements one by one and define APIs needed to satisfy them.
 We'll use RESTful APIs here.
 
@@ -77,7 +78,7 @@ GET /{shortURL}
 HTTP 302 Redirect to the original long URL
 ```
 
-## 4. Create a high level design. 
+## 4. Create a high level design
 In this step, our task is to come up with a high level design that satisfy all functional requirements.
 
 From user submitting a long url, the system shortens the URL, to the shorten URL being stored in the database, we need the following components in the system:
@@ -88,7 +89,7 @@ From user submitting a long url, the system shortens the URL, to the shorten URL
 
 Let's think about how components interact with one another to fulfill the functional requirements.
 
-### Functional requirement 1: user can submit a long URL and the server returns a short URL.
+### Functional requirement 1: user can submit a long URL and the server returns a short URL
 Client calls POST /urls API, includes URL and other optional parameters like expiration time.
 Server receives the request, generates a short URL and stores it into the database.
 There should be at least two tables in the database: `User` and `Url`. 
@@ -128,6 +129,7 @@ While unique counter with based62 solve collision problem, it comes with its own
 ### Non-functional requirement 2: the system should have low latency on redirection
 The latency between clicking a short url and landing on the original long url should be less than 200 ms. This should be enough for human feel of "real-time".
 
+#### Indexing
 There are a few things to consider. 
 First of all, the database. Server needs to query long url by short url, we need to ensure a low latency in queries. We could achieve this by adding proper indexes. For instance, if a common use case is querying long url by using short url, user id and expiration time. Add a composite index on these three fields would make query faster.
 In terms of index types, there are a few options:
@@ -142,13 +144,51 @@ However, indexing itself is not enough to support a large scale system. For inst
 ```
 It'd be challenging for most relational databases. 
 
+#### In-memory caching
 To reduce the pressure on the database, we could consider adding in-memory cache like Redis. Instead of routing to the database for every redirect, the server first checks if data exists in Redis. If yes, fetch the data and return to client. Only query database if no data exists in Redis and update Redis after data is queried from the database.
 Even though in-memory cache can greatly improve performance, there are some challenges as well. Firstly, in-memory cache needs time to warm up, which means initial requests goes to the database before cache is populated. Secondly, cache invalidation can be complex: in case of updates and deletes we need to update cache properly. Thirdly, we need to decide memory allocation, cache size, eviction policy, as well as which entries to store in in-memory cache. 
 
+
+#### Content Delivery Network (CDN)
 Another way to improve performance is to utilize CDN and edge computing. Specifically, the short url domain is served through a CDN with Points of Presence (PoPs) geographically, the CDN nodes cache the mappings of short and long urls, and redirects can be handled by a node closest to the location of the user. What's more, we could deploy the redirect logic to the edge like AWS Lambda@Edge, so requests will be handled at the edge and won't even need to reach to the server.
 The tradeoff here is higher cost and more complex CDN and edge computing setup.
 
+### Non-functional requirement 3: the system should scale to support 1 billion shortened URLs and 100 million DAU.
+
+[//]: # (We can imagine that system like this would expect more read requests than write requests. Let's assume that the ratio of read to write is 1 to 5.)
+[//]: # (We did some math in previous section: for 100M DAU, there'll be around 6k redirects per second on average. )
+[//]: # (If we consider peak hours the traffic will increase by 5 times, there'll be a total of 30k requests per second during peak hours.)
+
+Let's take a look at our service first. In order to increase servers during peak hours and reduce servers when traffic drops, we could deploy our server in EC2 Auto Scaling group. 
+With proper configuration of `desired instance`, `max instance` and `min instance`, as well as scaling policies, AWS automatically provision and de-provision servers for us.
+In additional, we add a Elastic Load Balancer to distribute traffic to each server within the auto-scaling group.
+
+As for our unique counter, we need to make it the single source of true because there could be multiple nodes, and we need to ensure the uniqueness among the nodes.
+For instance, we can have a centralized Redis instance as the global unique counter, and enable Redis replication for availability. 
+
+Now let's shift our focus to the database.
+
+First of all, let's do a bit of math to decide if a single database instance is enough to store 1B short urls. As defined in high level design, each row in data our database consists of the following:
+- short url code, ~8 bytes
+- long url, ~100 bytes
+- expiration time, ~8 bytes 
+- userId, ~4 bytes
+- other fields, e.g. creation time, created by, ~ 150 bytes
+
+That means each row is about 270 bytes, rounded up to 300 bytes. So for 1B rows, the total is 300 bytes * 1B rows = 300GB of data.
+This fits within modern SSDs and thus for now, a single instance of rational database, like MySQL and Postgres, is enough. If we have more data in the future and high hardware limit, we could do sharding and store the data across different servers.
 
 
+However, if we only have one database instance, we need to consider availability: what if the only database goes down? In that case the whole server will be unavailable. To prevent this, we can do one of the following:
+- database replication
+- database backup
 
+Database replication is by default supported in many rational database, like [MySQL](https://dev.mysql.com/doc/refman/8.4/en/replication.html), Postgres. Data from source database server is copied into one to more database servers (replicas). When source database server is down, traffic is redirected to one of the replicas.
+This, on the other hand, adds addition optional overhead because we need to ensure the connection between source and replicas works.
+
+Another way to have database backup by taking database snapshots periodically and stored them in a different place. In terms of recovery time: it takes time to restore from a backup, depending on the size and complexity of the database.
+This, of course comes with additional optional effort since we need to make sure the backup process works.
+
+## Final Design
+![final-design](pics/system-design-url-shortener-final-design.png)
 
