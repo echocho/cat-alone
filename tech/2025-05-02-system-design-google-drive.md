@@ -7,7 +7,7 @@ excerpt: "How to design a file storage service like Google Drive."
 ---
 
 # System Design: A File Storage Service like Google Drive
-[Here's some guidelines to approach a system design question.](2025-05-03_system-design-how-to-approach.md)
+[Here's some guidelines to approach a system design question.](2025-05-03-system-design-how-to-approach.md)
 
 Let's go through the design process step by step.
 
