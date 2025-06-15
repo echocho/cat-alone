@@ -1,37 +1,4 @@
-title: Echocho's Blog
-description: Thoughts on Tech, Systems, Life, and Books
-remote_theme: mmistakes/minimal-mistakes@4.24.0
-
-url: "https://echocho.github.io"  # GitHub pages URL
-baseurl: "/cat-alone"
-
-author:
-  name: Echocho
-  avatar: "/assets/images/avatar.png"  # optional
-
-plugins:
-  - jekyll-feed
-  - jekyll-sitemap
-  - jekyll-seo-tag
-  - jekyll-include-cache
-
-collections:
-  tech:
-    output: true
-  nontech:
-    output: true
-
-defaults:
-  - scope:
-      path: ""
-      type: posts
-    values:
-      layout: single
-      author_profile: true
-      read_time: true
-      comments: false
-      share: true
-      related: true
-
-theme_settings:
-  minimal_mistakes_skin: "air" # or "default", "mint", "dark", etc.
+theme: minima
+title: echocho's personal blog
+description: This is where I share cool stuff about tech, design, books, and my life.
+author: echocho
